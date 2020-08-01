@@ -106,19 +106,17 @@ class NetworkReachabilityService private constructor(context: Application) {
         NetworkInterface.getNetworkInterfaces()?.toList()?.mapNotNull { networkInterface ->
             networkInterface.inetAddresses?.toList()
                 ?.filter { !it.isLoopbackAddress && it.hostAddress.indexOf(':') < 0 }
-                ?.mapNotNull {
-                    it.hostAddress
-                }?.joinToString(", ")
-        }?.first()
+                ?.mapNotNull { if (it.hostAddress.isNullOrBlank()) null else it.hostAddress }
+                ?.firstOrNull { it.isNotEmpty() }
+        }?.firstOrNull()
 
     fun getIpv6HostAddress(): String? =
         NetworkInterface.getNetworkInterfaces()?.toList()?.mapNotNull { networkInterface ->
-            networkInterface.inetAddresses?.toList()?.filter {
-                !it.isLoopbackAddress && it is Inet6Address
-            }?.mapNotNull {
-                it.address
-            }?.joinToString(", ")
-        }?.first()
+            networkInterface.inetAddresses?.toList()
+                ?.filter { !it.isLoopbackAddress && it is Inet6Address }
+                ?.mapNotNull { if (it.hostAddress.isNullOrBlank()) null else it.hostAddress }
+                ?.firstOrNull { it.isNotEmpty() }
+        }?.firstOrNull()
 
     fun pauseListeningNetworkChanges() {
         try {
